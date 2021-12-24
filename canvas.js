@@ -13,6 +13,5 @@ canvas.addEventListener("mousemove", function(e) {
     let canvasY = Math.round(e.y - cRect.top); // from the X/Y postion to make
     ctx.clearRect(0, 0, canvas.width, canvas.height);   // (0, 0) the top left of the canvas
     ctx.fillText(`X: ${canvasX}, Y: ${canvasY}`, 10, 20);
-    console.log(e);
     
 })
