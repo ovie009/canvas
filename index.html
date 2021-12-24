@@ -6,21 +6,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canvas</title>
     <style>
-        #myCanvas{
-            border: 1px solid black;
+
+        body{
+            background-color: white;
+        }
+
+        #canvasHtml5{
+            border: 1px solid red;
+        }
+
+        #canvasJavascript{
+            border: 1px solid blue;
         }
 
         *{
             padding: 0;
             margin: 0;
         }
+        
     </style>
+    <script>
+
+        window.onload = (function() {
+            
+            //add a canvas element using javascript
+            let canvas = document.createElement('canvas');
+            canvas.id = 'canvasJavascript';
+            document.body.appendChild(canvas);
+        })
+
+    </script>
 </head>
 <body>
-    <canvas id="myCanvas" width="240" height="240" style="background-color: #808080;"></canvas>
-    <p></p>
-    <a id="download" download="myImage.jpg" href="" onclick="downloadImg(this);"> Download to myImage.jpg</a>
-    <!-- <button type="button" onclick="rotateCtx()">Rotate Context</button> -->
-    <script src="canvas.js"></script>
+
+    <!-- addind a canvas element using html -->
+    <canvas id="canvasHtml5"></canvas>
+
 </body>
 </html>
