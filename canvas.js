@@ -1,19 +1,16 @@
 //chapter 1 
 // Getting Started
-let canvas = document.getElementById('myCanvas');
-let ctx = canvas.getContext("2d");
-let ox =  canvas.width/2;
-let oy = canvas.height/2;
-
-ctx.font = "42px serif";
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-ctx.fillStyle = "#800";
-ctx.fillRect(ox/2, oy/2, ox, oy);
-
-
-let downloadImg = function (el) {
-    // get image URI from canvas object
-    let imageURI = canvas.toDataURL("image/jpg");
-    el.href = imageURI;
+function createCanvas(width, height) {
+    let canvas = document.createElement('Canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.ctx = canvas.getContext("2d");
+    return canvas;
 }
+
+let myCanvas = createCanvas(256, 256); //create a small ccnvas 256 by 256 pixel
+myCanvas.ctx.fillStyle = 'blue';
+myCanvas.ctx.fillRect(0, 0, 256, 256);
+
+myCanvas.id = 'canvasJavascript';
+// document.body.appendChild(myCanvas);
