@@ -1,273 +1,138 @@
 //chapter 1 
 // Getting Started
 
-//render justified stroke or fill text 
+// render text along an arc
 (function(){
     const FILL = 0;        // const to indicate filltext render
     const STROKE = 1;
-    const MEASURE = 2;
     var renderType = FILL; // used internal to set fill or stroke text
-    var maxSpaceSize = 3; // Multiplier for max space size. If greater then no justificatoin applied    
-    var minSpaceSize = 0.5; // Multiplier for minimum space size    
-    var renderTextJustified = function(ctx,text,x,y,width){        
-        var words, wordsWidth, count, spaces, spaceWidth, adjSpace, renderer, i, textAlign, useSize, totalWidth;
-        textAlign = ctx.textAlign; // get current align settings
-        ctx.textAlign = "left";
-        wordsWidth = 0;
-        words = text.split(" ").map(word => {
-            var w = ctx.measureText(word).width;
-            wordsWidth += w;
-            return {
-                width : w,
-                word : word,
-            };
-        });
-        // count = num words, spaces = number spaces, spaceWidth normal space size
-        // adjSpace new space size >= min size. useSize Resulting space size used to render
-        count = words.length;
-        spaces = count - 1;
-        spaceWidth = ctx.measureText(" ").width;
-        adjSpace = Math.max(spaceWidth * minSpaceSize, (width - wordsWidth) / spaces);
-        useSize = adjSpace > spaceWidth * maxSpaceSize ? spaceWidth : adjSpace;
-        totalWidth = wordsWidth + useSize * spaces;
-        if(renderType === MEASURE){ // if measuring return size
-            ctx.textAlign = textAlign;
-            return totalWidth;
-        }
-        renderer = renderType === FILL ? ctx.fillText.bind(ctx) : ctx.strokeText.bind(ctx); // fill or stroke
-        switch(textAlign){
-            case "right":
-                x -= totalWidth;
-                break;
-            case "end":
-                x += width - totalWidth;
-                break;
-            case "center": // intentional fall through to default
-                x -= totalWidth / 2;
-            default:
-        }
-        if(useSize === spaceWidth){ // if space size unchanged
-            renderer(text,x,y);
-        } else {
-            for(i = 0; i < count; i += 1){
-                renderer(words[i].word,x,y);
-                x += words[i].width;
-                x += useSize;
-            }
-        }
-        ctx.textAlign = textAlign;
+    const multiplyCurrentTransform = true; 
+    // if true Use current transform when rendering
+    // if false use absolute coordinates which is a little quicker 
+    // after render the currentTransform is restored to default transform
+
+    // measure circle text
+    // ctx: canvas context
+    // text: string of text to measure
+    // r: radius in pixels
+    //
+    // returns the size metrics of the text
+    //
+    // width: Pixel width of text 
+    // angularWidth : angular width of text in radians
+    // pixelAngularSize : angular width of a pixel in radians
+    var measure = function(ctx, text, radius){
+        var textWidth = ctx.measureText(text).width; // get the width of all the text
+        return {
+            width : textWidth,
+            angularWidth : (1 / radius) * textWidth,
+            pixelAngularSize : 1 / radius
+        };
     }
-    // Parse vet and set settings object.
-    var justifiedTextSettings = function(settings){
-        var min,max;
-        var vetNumber = (num, defaultNum) => {
-            num = num !== null && num !== null && !isNaN(num) ? num : defaultNum;
-            if(num < 0){
-                num = defaultNum;
+
+    // displays text along a circle
+    // ctx: canvas context
+    // text: string of text to measure
+    // x,y: position of circle center
+    // r: radius of circle in pixels
+    // start: angle in radians to start.
+    // [end]: optional. If included text align is ignored and the text is    
+    //        scaled to fit between start and end;    
+    // [forward]: optional default true. if true text direction is forwards, if false  direction is backward    
+    var circleText = function (ctx, text, x, y, radius, start, end, forward) {
+        var i, textWidth, pA, pAS, a, aw, wScale, aligned, dir, fontSize;
+        if(text.trim() === "" || ctx.globalAlpha === 0){ // don't render empty string or transparent
+            return;
+        }
+        if(isNaN(x) || isNaN(y) || isNaN(radius) || isNaN(start) || (end !== undefined && end !== null && isNaN(end))){
+            throw TypeError("circle text arguments requires a number for x,y, radius, start, and end.");
+        }
+        aligned = ctx.textAlign;        // save the current textAlign so that it can be restored at end        
+        dir = forward ? 1 : forward === false ? -1 : 1;  // set dir if not true or false set forward as true          
+        pAS = 1 / radius;               // get the angular size of a pixel in radians        
+        textWidth = ctx.measureText(text).width; // get the width of all the text
+        if (end !== undefined && end !== null) { // if end is supplied then fit text between start and end            
+            pA = ((end - start) / textWidth) * dir;
+            wScale = (pA / pAS) * dir;
+        } else {
+            // if no end is supplied correct start and end for alignment
+            // if forward is not given then swap top of circle text to read the correct direction
+            if(forward === null || forward === undefined){
+                if(((start % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) > Math.PI){
+                    dir = -1;
+                }
             }
-            return num;
+            pA = -pAS * dir ;
+            wScale = -1 * dir;
+            switch (aligned) {
+            case "center":       // if centered move around half width                
+                start -= (pA * textWidth )/2;
+                end = start + pA * textWidth;
+                break;
+            case "right":// intentionally falls through to case "end"
+            case "end":
+                end = start;
+                start -= pA * textWidth;
+                break;
+            case "left":  // intentionally falls through to case "start"
+            case "start":
+                end = start + pA * textWidth;
+            }
         }
-        if(settings === undefined || settings === null){
-            return;
+        ctx.textAlign = "center";                     // align for rendering
+        a = start;                                    // set the start angle        
+        for (var i = 0; i < text.length; i += 1) {    // for each character            
+            aw = ctx.measureText(text[i]).width * pA; // get the angular width of the text            
+            var xDx = Math.cos(a + aw / 2);           // get the yAxies vector from the center x,y out
+            var xDy = Math.sin(a + aw / 2);
+            if(multiplyCurrentTransform){ // transform multiplying current transform
+                ctx.save();
+                if (xDy < 0) { // is the text upside down. If it is flip it
+                    ctx.transform(-xDy * wScale, xDx * wScale, -xDx, -xDy, xDx * radius + x, xDy * radius + y);
+                } else {
+                    ctx.transform(-xDy * wScale, xDx * wScale, xDx, xDy, xDx * radius + x, xDy * radius + y);
+                }
+            }else{
+                if (xDy < 0) { // is the text upside down. If it is flip it
+                    ctx.setTransform(-xDy * wScale, xDx * wScale, -xDx, -xDy, xDx * radius + x, xDy * radius + y);
+                } else {
+                    ctx.setTransform(-xDy * wScale, xDx * wScale, xDx, xDy, xDx * radius + x, xDy * radius + y);
+                }
+            }
+            if(renderType === FILL){
+                ctx.fillText(text[i], 0, 0);    // render the character
+            }else{
+                ctx.strokeText(text[i], 0, 0);  // render the character
+            }
+            if(multiplyCurrentTransform){  // restore current transform
+                ctx.restore();
+            }
+            a += aw;                     // step to the next angle
         }
-        max = vetNumber(settings.maxSpaceSize, maxSpaceSize);
-        min = vetNumber(settings.minSpaceSize, minSpaceSize);
-        if(min > max){
-            return;
+        // all done clean up.
+        if(!multiplyCurrentTransform){
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // restore the transform
         }
-        minSpaceSize = min;
-        maxSpaceSize = max;
+        ctx.textAlign = aligned;            // restore the text alignment
     }
     // define fill text
-    var fillJustifyText = function(text, x, y, width, settings){
-        justifiedTextSettings(settings);
+    var fillCircleText = function(text, x, y, radius, start, end, forward){
         renderType = FILL;
-        renderTextJustified(this, text, x, y, width);
+        circleText(this, text, x, y, radius, start, end, forward);
     }
     // define stroke text
-    var strokeJustifyText = function(text, x, y, width, settings){
-        justifiedTextSettings(settings);
+    var strokeCircleText = function(text, x, y, radius, start, end, forward){
         renderType = STROKE;
-        renderTextJustified(this, text, x, y, width);
+        circleText(this, text, x, y, radius, start, end, forward);
     }
-    // define measure text
-    var measureJustifiedText = function(text, width, settings){
-        justifiedTextSettings(settings);
-        renderType = MEASURE;
-        return renderTextJustified(this, text, 0, 0, width);
+    // define measure text    
+    var measureCircleTextExt = function(text,radius){
+        return measure(this, text, radius);
     }
-    // code point A
-    // set the prototypes
-    CanvasRenderingContext2D.prototype.fillJustifyText = fillJustifyText;
-    CanvasRenderingContext2D.prototype.strokeJustifyText = strokeJustifyText;
-    CanvasRenderingContext2D.prototype.measureJustifiedText = measureJustifiedText;
-    // code point B
-    
-    // optional code if you do not wish to extend the CanvasRenderingContext2D prototype
-    /*// Uncomment from here to the closing comment
-    window.justifiedText = {
-        fill : function(ctx, text, x, y, width, settings){
-            justifiedTextSettings(settings);
-            renderType = FILL;
-            renderTextJustified(ctx, text, x, y, width);
-        },
-        stroke : function(ctx, text, x, y, width, settings){
-            justifiedTextSettings(settings);
-            renderType = STROKE;
-            renderTextJustified(ctx, text, x, y, width);
-        },
-        measure : function(ctx, text, width, settings){
-            justifiedTextSettings(settings);
-            renderType = MEASURE;
-            return renderTextJustified(ctx, text, 0, 0, width);
-        }
-    }
-    to here*/ 
-})();
-
-// Requires justified text extensions 
-//render justified fill para 
-(function(){    
-    // code point A    
-    if(typeof CanvasRenderingContext2D.prototype.fillJustifyText !== "function"){           
-        throw new ReferenceError("Justified Paragraph extension missing requiered CanvasRenderingContext2D justified text extension");    
-    }    
-    var maxSpaceSize = 3; // Multiplier for max space size. If greater then no justificatoin applied    
-    var minSpaceSize = 0.5; // Multiplier for minimum space size      
-    var compact = true; // if true then try and fit as many words as possible. If false then try to get the spacing as close as possible to normal    
-    var lineSpacing = 1.5; // space between lines    
-    const noJustifySetting = {  // This setting forces justified text off. Used to render last line of paragraph.        
-        minSpaceSize : 1,        
-        maxSpaceSize : 1,    
-    }
-    // Parse vet and set settings object.    
-    var justifiedTextSettings = function(settings){
-        var min, max;
-        var vetNumber = (num, defaultNum) => {
-            num = num !== null && num !== null && !isNaN(num) ? num : defaultNum;
-            return num < 0 ? defaultNum : num;
-        }        
-        if(settings === undefined || settings === null){ return; }
-        compact = settings.compact === true ? true : settings.compact === false ? false : compact;
-        max = vetNumber(settings.maxSpaceSize, maxSpaceSize);
-        min = vetNumber(settings.minSpaceSize, minSpaceSize);
-        lineSpacing = vetNumber(settings.lineSpacing, lineSpacing);
-        if(min > max){ return; }
-        minSpaceSize = min;
-        maxSpaceSize = max;
-    }
-    var getFontSize = function(font){  // get the font size.
-        var numFind = /[0-9]+/;
-        var number = numFind.exec(font)[0];
-        if(isNaN(number)){
-            throw new ReferenceError("justifiedPar Cant find font size");
-        }
-        return Number(number);
-    }    
-    function justifiedPar(ctx, text, x, y, width, settings, stroke){
-        var spaceWidth, minS, maxS, words, count, lines, lineWidth, lastLineWidth, lastSize, i, renderer, fontSize, adjSpace, spaces, word, lineWords, lineFound;
-        spaceWidth = ctx.measureText(" ").width; 
-        minS = spaceWidth * minSpaceSize;
-        maxS = spaceWidth * maxSpaceSize;
-        words = text.split(" ").map(word => {  // measure all words.            
-            var w = ctx.measureText(word).width;                            
-            return {
-                width : w,
-                word : word,
-            };
-        });
-        // count = num words, spaces = number spaces, spaceWidth normal space size        
-        // adjSpace new space size >= min size. useSize Resulting space size used to render        
-        count = 0;
-        lines = [];        
-        // create lines by shifting words from the words array until the spacing is optimal. If compact        
-        // true then will true and fit as many words as possible. Else it will try and get the spacing as        
-        // close as possible to the normal spacing        
-        while(words.length > 0){            
-            lastLineWidth = 0;            
-            lastSize = -1;            
-            lineFound = false;            
-            // each line must have at least one word.            
-            word = words.shift();            
-            lineWidth = word.width;            
-            lineWords = [word.word];            
-            count = 0;            
-            while(lineWidth < width && words.length > 0){ // Add words to line
-                word = words.shift();                
-                lineWidth += word.width;                
-                lineWords.push(word.word);                
-                count += 1;                
-                spaces = count - 1;                
-                adjSpace =  (width - lineWidth) / spaces;
-                if(minS > adjSpace){  // if spacing less than min remove last word and finish line                    
-                    lineFound = true;                    
-                    words.unshift(word);                    
-                    lineWords.pop();                
-                }else{                    
-                    if(!compact){ // if compact mode                        
-                        if(adjSpace < spaceWidth){ // if less than normal space width                            
-                            if(lastSize === -1){
-                                lastSize = adjSpace;                           
-                            }                            
-                            // check if with last word on if its closer to space width                            
-                            if(Math.abs(spaceWidth - adjSpace) < Math.abs(spaceWidth - lastSize)){
-                                lineFound = true; // yes keep it                            
-                            }else{                                
-                                words.unshift(word);  // no better fit if last word removes                                
-                                lineWords.pop();
-                                lineFound = true;                            
-                            }
-                        }
-                    }
-                }
-                lastSize = adjSpace; // remember spacing
-            }
-            lines.push(lineWords.join(" ")); // and the line
-        }
-        // lines have been worked out get font size, render, and render all the lines. last
-        // line may need to be rendered as normal so it is outside the loop.
-        fontSize = getFontSize(ctx.font);
-        renderer = stroke === true ? ctx.strokeJustifyText.bind(ctx) : ctx.fillJustifyText.bind(ctx);
-        for(i = 0; i < lines.length - 1; i ++){
-            renderer(lines[i], x, y, width, settings);
-            y += lineSpacing * fontSize;
-        }        
-        if(lines.length > 0){ // last line if left or start aligned for no justify            
-            if(ctx.textAlign === "left" || ctx.textAlign === "start"){
-                renderer(lines[lines.length - 1], x, y, width, noJustifySetting);
-                ctx.measureJustifiedText("", width, settings);
-            }else{
-                renderer(lines[lines.length - 1], x, y, width);
-            }
-        }
-        // return details about the paragraph.
-        y += lineSpacing * fontSize;
-        return {
-            nextLine : y,
-            fontSize : fontSize,
-            lineHeight : lineSpacing * fontSize,
-        };    
-    }    
-    // define fill
-    var fillParagraphText = function(text, x, y, width, settings){
-        justifiedTextSettings(settings);
-        settings = {
-            minSpaceSize : minSpaceSize,
-            maxSpaceSize : maxSpaceSize,
-        };        
-        return justifiedPar(this, text, x, y, width, settings);
-    }    
-    // define stroke
-    var strokeParagraphText = function(text, x, y, width, settings){
-        justifiedTextSettings(settings);
-        settings = {
-            minSpaceSize : minSpaceSize,
-            maxSpaceSize : maxSpaceSize,
-        };
-        return justifiedPar(this, text, x, y, width, settings,true);
-    }    
-    CanvasRenderingContext2D.prototype.fillParaText = fillParagraphText;
-    CanvasRenderingContext2D.prototype.strokeParaText = strokeParagraphText;
+    // set the prototypes    
+    CanvasRenderingContext2D.prototype.fillCircleText = fillCircleText;
+    CanvasRenderingContext2D.prototype.strokeCircleText = strokeCircleText;
+    CanvasRenderingContext2D.prototype.measureCircleText = measureCircleTextExt;
 
 })();
 
@@ -276,73 +141,14 @@ let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth / 2;
 canvas.height = window.innerHeight / 2;
-// let sideMargin = 20;
-// canvas.width = 500;
-// canvas.height = 700;
-// let w = canvas.width;
-// let h = canvas.height;
-// ctx.clearRect(0, 0, w, h);
-// ctx.font = "30px arial";
-// ctx.textAlign = "center";
-// ctx.fillText("Justified Paragraph Examples.", canvas.width/2, 60);
-// ctx.font = "20px arial";
-// ctx.textAlign = "left";
-// // set para settings 
-// let setting = {
-//     maxSpaceSize : 6,
-//     minSpaceSize : 0.5,
-//     lineSpacing : 1.2,
-//     compact : true, 
-// } 
 
 
-let para = 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Praesentium ducimus dicta fugit ipsam quae maxime quis temporibus culpa id, natus ad adipisci hic obcaecati atque, reiciendis dignissimos, doloremque veritatis sunt? Nostrum maiores delectus ducimus ipsum deleniti et dolorem nesciunt sunt.';
-ctx.font = "25px arial";
-ctx.textAlign = "center";
-var left = 10;
-var center = canvas.width / 2;
-var width = canvas.width-left*2; 
-var y = 20; var size = 16; 
-var i = 0; 
-// ctx.fillText("Justified paragraph examples.",center,y); 
-ctx.strokeText("Justified paragraph examples.",center,y)
-y+= 30; 
-ctx.font = "14px arial"; 
-ctx.textAlign = "left";
-// set para settings 
-var setting = {    
-    maxSpaceSize : 6,
-    minSpaceSize : 0.5,
-    lineSpacing : 1.2,
-    compact : true, 
-} 
-// Show the left and right bounds. 
-ctx.strokeStyle = "red"; 
-ctx.beginPath(); 
-ctx.moveTo(left,y - size * 2); 
-ctx.lineTo(left, y + size * 15); 
-ctx.moveTo(canvas.width - left,y - size * 2); 
-ctx.lineTo(canvas.width - left, y + size * 15); 
-ctx.stroke(); 
-ctx.textAlign = "left"; 
-ctx.fillStyle = "black";
-// Draw paragraph 
-var line = ctx.fillParaText(para, left, y, width, setting);  
-// settings is remembered    
-// Next paragraph 
-y = line.nextLine + line.lineHeight; 
-setting.compact = false; 
-ctx.strokeStyle = "black";
+let text = 'Lorem ipsum dolor sit amet.';
+let x = canvas.width/2;
+let y = canvas.height/2;
+let radius = 100;
+let start = Math.PI;
+let end = 1.5*Math.PI;
+let forward = true;
 ctx.font = "20px arial";
-ctx.strokeParaText(para, left, y, width, setting);
-
-// ctx.strokeJustifyText('Lorem ipsum, dolor sit amet.', sideMargin, 180, w - 2*sideMargin)
-// let measuredText = ctx.measureJustifiedText('Lorem ipsum, dolor sit amet.', w - 2*sideMargin);
-ctx.font = "25px arial";
-ctx.fillJustifyText('Lorem ipsum, dolor sit amet cons.', left, 330, width)
-ctx.font = "50px arial";
-ctx.strokeStyle = 'Black';
-ctx.strokeJustifyText('Lorem ipsum, dolor sit amet cons.', left, 380, width)
-
-
-
+ctx.fillCircleText(text, x, y, radius, start, end, forward)
