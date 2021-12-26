@@ -340,5 +340,4 @@ ctx.strokeStyle = 'Black';
 ctx.strokeJustifyText('Lorem ipsum, dolor sit amet cons.', left, 300, width)
 
 
-console.log('Lorem ipsum dolor sit amet consectetur adipisicing elit. Odit ab voluptatem aspernatur ducimus assumenda placeat, sunt eum velit quod quam.');
 
