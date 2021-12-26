@@ -139,16 +139,54 @@
 
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth / 2;
-canvas.height = window.innerHeight / 2;
+canvas.width = window.innerWidth - 20;
+canvas.height = window.innerHeight - 20;
+
+//random integer
+function randomInteger(min, max) {
+    return Math.floor((Math.random() * (max - min)) + min);
+}
+
+//random float
+function randomFloat(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
 
 
 let text = 'Lorem ipsum dolor sit amet.';
 let x = canvas.width/2;
 let y = canvas.height/2;
-let radius = 100;
-let start = Math.PI;
-let end = 1.5*Math.PI;
-let forward = true;
-ctx.font = "20px arial";
-ctx.fillCircleText(text, x, y, radius, start, end, forward)
+
+for (let i = 1; i < 10; i++) {
+    let radius = i * 40;
+    let start = randomFloat(0, 2*Math.PI);
+    let end = randomFloat(1.5, 2) * start;
+    let forward;
+    let flowControl = randomFloat(0, 1); // variable to control forward true or false
+    let typeControl = randomFloat(0, 1); // variable to control fill or stroke text
+    if (flowControl >= 0.5) {
+        
+        forward = true;
+
+    } else{
+        
+        forward = false;
+    
+    }
+    
+    ctx.font = `${randomInteger(20, 60)}px arial`;
+    
+    if (typeControl >= 0.5) {
+        
+        ctx.fillCircleText(text, x, y, radius, start, end, forward)
+
+    } else{
+        
+        ctx.strokeCircleText(text, x, y, radius, start, end, forward)
+    
+    }
+
+    console.log(flowControl);
+    
+}
