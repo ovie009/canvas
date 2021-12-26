@@ -1,6 +1,7 @@
 //chapter 1 
 // Getting Started
 
+//render justified stroke or fill text 
 (function(){
     const FILL = 0;        // const to indicate filltext render
     const STROKE = 1;
@@ -125,6 +126,7 @@
 })();
 
 // Requires justified text extensions 
+//render justified fill para 
 (function(){    
     // code point A    
     if(typeof CanvasRenderingContext2D.prototype.fillJustifyText !== "function"){           
@@ -302,7 +304,8 @@ var center = canvas.width / 2;
 var width = canvas.width-left*2; 
 var y = 20; var size = 16; 
 var i = 0; 
-ctx.fillText("Justified paragraph examples.",center,y); 
+// ctx.fillText("Justified paragraph examples.",center,y); 
+ctx.strokeText("Justified paragraph examples.",center,y)
 y+= 30; 
 ctx.font = "14px arial"; 
 ctx.textAlign = "left";
@@ -329,15 +332,17 @@ var line = ctx.fillParaText(para, left, y, width, setting);
 // Next paragraph 
 y = line.nextLine + line.lineHeight; 
 setting.compact = false; 
-ctx.fillParaText(para, left, y, width, setting);
+ctx.strokeStyle = "black";
+ctx.font = "20px arial";
+ctx.strokeParaText(para, left, y, width, setting);
 
 // ctx.strokeJustifyText('Lorem ipsum, dolor sit amet.', sideMargin, 180, w - 2*sideMargin)
 // let measuredText = ctx.measureJustifiedText('Lorem ipsum, dolor sit amet.', w - 2*sideMargin);
 ctx.font = "25px arial";
-ctx.fillJustifyText('Lorem ipsum, dolor sit amet cons.', left, 250, width)
+ctx.fillJustifyText('Lorem ipsum, dolor sit amet cons.', left, 330, width)
 ctx.font = "50px arial";
 ctx.strokeStyle = 'Black';
-ctx.strokeJustifyText('Lorem ipsum, dolor sit amet cons.', left, 300, width)
+ctx.strokeJustifyText('Lorem ipsum, dolor sit amet cons.', left, 380, width)
 
 
 
