@@ -1,37 +1,6 @@
 //chapter 1 
 // Getting Started
 
-// render text along a curve
-// pass 8 values for cubic bezier
-// pass 6 values for quadratic
-// wrap text into paragraphs
-function wrapText(text, x, y, maxWidth, fontSize, fontFace){
-    var firstY=y;
-    var words = text.split(' ');
-    var line = '';  var lineHeight=fontSize*1.286; // a good approx for 10-18px sizes
-
-    ctx.font=fontSize+" "+fontFace;
-    ctx.textBaseline='top';
-  
-    for(var n = 0; n < words.length; n++) {
-        var testLine = line + words[n] + ' ';
-        var metrics = ctx.measureText(testLine);
-        var testWidth = metrics.width;
-        if(testWidth > maxWidth) {
-            ctx.fillText(line, x, y);
-            if(n<words.length-1){
-                line = words[n] + ' ';
-                y += lineHeight;
-            }
-        }
-        else {
-            line = testLine;
-        }
-    }
-    ctx.fillText(line, x, y);
-} 
-
-
 //canvas variable
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
@@ -59,4 +28,45 @@ let maxWidth = 250;
 let fontSize = 20;
 let fontFace = 'arial';
 
-wrapText(text, x, y, maxWidth, fontSize, fontFace);
+// ctx.scale(3, 3);
+ctx.beginPath();
+ctx.moveTo(75,40);
+ctx.bezierCurveTo(75,37,70,25,50,25);
+ctx.bezierCurveTo(20,25,20,62.5,20,62.5);
+ctx.bezierCurveTo(20,80,40,102,75,120);
+ctx.bezierCurveTo(110,102,130,80,130,62.5);
+ctx.bezierCurveTo(130,62.5,130,25,100,25);
+ctx.bezierCurveTo(85,25,75,37,75,40);
+ctx.fillStyle='red';
+ctx.fill();
+ctx.closePath();
+ctx.beginPath()
+// ctx.setTransform(1,0,0,1,0,0);
+ctx.fillStyle='blue';
+ctx.arc(75, 40, 5, 0, 2*Math.PI, false);
+ctx.fill();
+ctx.closePath();
+ctx.beginPath()
+ctx.arc(50, 25, 5, 0, 2*Math.PI, false);
+ctx.fill();
+ctx.closePath();
+ctx.beginPath()
+ctx.arc(20, 62.5, 5, 0, 2*Math.PI, false);
+ctx.fill();
+ctx.closePath();
+ctx.beginPath()
+ctx.arc(75, 120, 5, 0, 2*Math.PI, false);
+ctx.fill();
+ctx.closePath();
+ctx.beginPath()
+ctx.arc(130, 62.5, 5, 0, 2*Math.PI, false);
+ctx.fill();
+ctx.closePath();
+ctx.beginPath()
+ctx.arc(100, 25, 5, 0, 2*Math.PI, false);
+ctx.fill();
+ctx.closePath();
+ctx.beginPath()
+ctx.arc(75, 40, 5, 0, 2*Math.PI, false);
+ctx.fill();
+ctx.closePath();
