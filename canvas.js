@@ -1,146 +1,139 @@
 //chapter 1 
 // Getting Started
 
-// render text along an arc
-(function(){
-    const FILL = 0;        // const to indicate filltext render
-    const STROKE = 1;
-    var renderType = FILL; // used internal to set fill or stroke text
-    const multiplyCurrentTransform = true; 
-    // if true Use current transform when rendering
-    // if false use absolute coordinates which is a little quicker 
-    // after render the currentTransform is restored to default transform
-
-    // measure circle text
-    // ctx: canvas context
-    // text: string of text to measure
-    // r: radius in pixels
-    //
-    // returns the size metrics of the text
-    //
-    // width: Pixel width of text 
-    // angularWidth : angular width of text in radians
-    // pixelAngularSize : angular width of a pixel in radians
-    var measure = function(ctx, text, radius){
-        var textWidth = ctx.measureText(text).width; // get the width of all the text
-        return {
-            width : textWidth,
-            angularWidth : (1 / radius) * textWidth,
-            pixelAngularSize : 1 / radius
-        };
+// render text along a curve
+// pass 8 values for cubic bezier
+// pass 6 values for quadratic
+// Renders text from start of curve 
+var textOnCurve = function(text,offset,x1,y1,x2,y2,x3,y3,x4,y4){
+    ctx.save();
+    ctx.textAlign = "center";
+    var widths = [];
+    for(var i = 0; i < text.length; i ++){
+        widths[widths.length] = ctx.measureText(text[i]).width;
     }
+    var ch = curveHelper(x1,y1,x2,y2,x3,y3,x4,y4);
+    var pos = offset;
+    var cpos = 0;
 
-    // displays text along a circle
-    // ctx: canvas context
-    // text: string of text to measure
-    // x,y: position of circle center
-    // r: radius of circle in pixels
-    // start: angle in radians to start.
-    // [end]: optional. If included text align is ignored and the text is    
-    //        scaled to fit between start and end;    
-    // [forward]: optional default true. if true text direction is forwards, if false  direction is backward    
-    var circleText = function (ctx, text, x, y, radius, start, end, forward) {
-        var i, textWidth, pA, pAS, a, aw, wScale, aligned, dir, fontSize;
-        if(text.trim() === "" || ctx.globalAlpha === 0){ // don't render empty string or transparent
-            return;
-        }
-        if(isNaN(x) || isNaN(y) || isNaN(radius) || isNaN(start) || (end !== undefined && end !== null && isNaN(end))){
-            throw TypeError("circle text arguments requires a number for x,y, radius, start, and end.");
-        }
-        aligned = ctx.textAlign;        // save the current textAlign so that it can be restored at end        
-        dir = forward ? 1 : forward === false ? -1 : 1;  // set dir if not true or false set forward as true          
-        pAS = 1 / radius;               // get the angular size of a pixel in radians        
-        textWidth = ctx.measureText(text).width; // get the width of all the text
-        if (end !== undefined && end !== null) { // if end is supplied then fit text between start and end            
-            pA = ((end - start) / textWidth) * dir;
-            wScale = (pA / pAS) * dir;
-        } else {
-            // if no end is supplied correct start and end for alignment
-            // if forward is not given then swap top of circle text to read the correct direction
-            if(forward === null || forward === undefined){
-                if(((start % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) > Math.PI){
-                    dir = -1;
-                }
-            }
-            pA = -pAS * dir ;
-            wScale = -1 * dir;
-            switch (aligned) {
-            case "center":       // if centered move around half width                
-                start -= (pA * textWidth )/2;
-                end = start + pA * textWidth;
-                break;
-            case "right":// intentionally falls through to case "end"
-            case "end":
-                end = start;
-                start -= pA * textWidth;
-                break;
-            case "left":  // intentionally falls through to case "start"
-            case "start":
-                end = start + pA * textWidth;
-            }
-        }
-        ctx.textAlign = "center";                     // align for rendering
-        a = start;                                    // set the start angle        
-        for (var i = 0; i < text.length; i += 1) {    // for each character            
-            aw = ctx.measureText(text[i]).width * pA; // get the angular width of the text            
-            var xDx = Math.cos(a + aw / 2);           // get the yAxies vector from the center x,y out
-            var xDy = Math.sin(a + aw / 2);
-            if(multiplyCurrentTransform){ // transform multiplying current transform
-                ctx.save();
-                if (xDy < 0) { // is the text upside down. If it is flip it
-                    ctx.transform(-xDy * wScale, xDx * wScale, -xDx, -xDy, xDx * radius + x, xDy * radius + y);
-                } else {
-                    ctx.transform(-xDy * wScale, xDx * wScale, xDx, xDy, xDx * radius + x, xDy * radius + y);
-                }
-            }else{
-                if (xDy < 0) { // is the text upside down. If it is flip it
-                    ctx.setTransform(-xDy * wScale, xDx * wScale, -xDx, -xDy, xDx * radius + x, xDy * radius + y);
-                } else {
-                    ctx.setTransform(-xDy * wScale, xDx * wScale, xDx, xDy, xDx * radius + x, xDy * radius + y);
-                }
-            }
-            if(renderType === FILL){
-                ctx.fillText(text[i], 0, 0);    // render the character
-            }else{
-                ctx.strokeText(text[i], 0, 0);  // render the character
-            }
-            if(multiplyCurrentTransform){  // restore current transform
-                ctx.restore();
-            }
-            a += aw;                     // step to the next angle
-        }
-        // all done clean up.
-        if(!multiplyCurrentTransform){
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // restore the transform
-        }
-        ctx.textAlign = aligned;            // restore the text alignment
-    }
-    // define fill text
-    var fillCircleText = function(text, x, y, radius, start, end, forward){
-        renderType = FILL;
-        circleText(this, text, x, y, radius, start, end, forward);
-    }
-    // define stroke text
-    var strokeCircleText = function(text, x, y, radius, start, end, forward){
-        renderType = STROKE;
-        circleText(this, text, x, y, radius, start, end, forward);
-    }
-    // define measure text    
-    var measureCircleTextExt = function(text,radius){
-        return measure(this, text, radius);
-    }
-    // set the prototypes    
-    CanvasRenderingContext2D.prototype.fillCircleText = fillCircleText;
-    CanvasRenderingContext2D.prototype.strokeCircleText = strokeCircleText;
-    CanvasRenderingContext2D.prototype.measureCircleText = measureCircleTextExt;
+    for(var i = 0; i < text.length; i ++){
+        pos += widths[i] / 2;
+        cpos = ch.forward(pos);
+        ch.tangent(cpos);
+        ctx.setTransform(ch.vect.x, ch.vect.y, -ch.vect.y, ch.vect.x, ch.vec.x, ch.vec.y);
+        ctx.fillText(text[i],0,0);
 
-})();
+        pos += widths[i] / 2;
+    }    
+    ctx.restore(); 
+}
 
+// helper function locates points on bezier curves. 
+function curveHelper(x1, y1, x2, y2, x3, y3, x4, y4){
+    var tx1, ty1, tx2, ty2, tx3, ty3, tx4, ty4;
+    var a,b,c,u;
+    var vec,currentPos,vec1,vect;
+    vec = {x:0,y:0};
+    vec1 = {x:0,y:0};
+    vect = {x:0,y:0};
+    quad = false;
+    currentPos = 0;
+    currentDist = 0;
+    if(x4 === undefined || x4 === null){
+        quad = true;
+        x4 = x3;
+        y4 = y3;
+    }
+    var estLen = Math.sqrt((x4 - x1) * (x4 - x1) + (y4 - y1) * (y4 - y1));
+    var onePix = 1 / estLen;
+    function posAtC(c){
+        tx1 = x1; ty1 = y1;
+        tx2 = x2; ty2 = y2;
+        tx3 = x3; ty3 = y3;
+        tx1 += (tx2 - tx1) * c;
+        ty1 += (ty2 - ty1) * c;
+        tx2 += (tx3 - tx2) * c;
+        ty2 += (ty3 - ty2) * c;
+        tx3 += (x4 - tx3) * c;
+        ty3 += (y4 - ty3) * c;
+        tx1 += (tx2 - tx1) * c;
+        ty1 += (ty2 - ty1) * c;
+        tx2 += (tx3 - tx2) * c;
+        ty2 += (ty3 - ty2) * c;
+        vec.x = tx1 + (tx2 - tx1) * c;
+        vec.y = ty1 + (ty2 - ty1) * c;
+        return vec;
+    }    
+    function posAtQ(c){
+        tx1 = x1; ty1 = y1;
+        tx2 = x2; ty2 = y2;
+        tx1 += (tx2 - tx1) * c;
+        ty1 += (ty2 - ty1) * c;
+        tx2 += (x3 - tx2) * c;
+        ty2 += (y3 - ty2) * c;
+        vec.x = tx1 + (tx2 - tx1) * c;
+        vec.y = ty1 + (ty2 - ty1) * c;
+        return vec;
+    }
+    function forward(dist){
+        var step;
+        helper.posAt(currentPos);
 
+        while(currentDist < dist){
+            vec1.x = vec.x;
+            vec1.y = vec.y;
+            currentPos += onePix;
+            helper.posAt(currentPos);
+            currentDist += step = Math.sqrt((vec.x - vec1.x) * (vec.x - vec1.x) + (vec.y - vec1.y) * (vec.y - vec1.y));
+        }
+        currentPos -= ((currentDist - dist) / step) * onePix;
+        currentDist -= step;
+        helper.posAt(currentPos);
+        currentDist += Math.sqrt((vec.x - vec1.x) * (vec.x - vec1.x) + (vec.y - vec1.y) * (vec.y - vec1.y));
+        return currentPos;
+    }
+    function tangentQ(pos){
+        a = (1-pos) * 2;
+        b = pos * 2;
+        vect.x = a * (x2 - x1) + b * (x3 - x2);
+        vect.y = a * (y2 - y1) + b * (y3 - y2);
+        u = Math.sqrt(vect.x * vect.x + vect.y * vect.y);
+        vect.x /= u;
+        vect.y /= u;
+    }
+    function tangentC(pos){
+        a  = (1-pos);
+        b  = 6 * a * pos;
+        a *= 3 * a;
+        c  = 3 * pos * pos;
+        vect.x  = -x1 * a + x2 * (a - b) + x3 * (b - c) + x4 * c;
+        vect.y  = -y1 * a + y2 * (a - b) + y3 * (b - c) + y4 * c;
+        u = Math.sqrt(vect.x * vect.x + vect.y * vect.y);
+        vect.x /= u;
+        vect.y /= u;
+    }
+    var helper = {
+        vec : vec,
+        vect : vect,
+        forward : forward,
+    }
+    if(quad){
+        helper.posAt = posAtQ;
+        helper.tangent = tangentQ;
+    }else{
+        helper.posAt = posAtC;
+        helper.tangent = tangentC;
+    }
+    return helper;
+} 
+
+//canvas variable
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth - 20;
 canvas.height = window.innerHeight - 20;
+canvas.width = 500;
+canvas.height = 500;
 
 //random integer
 function randomInteger(min, max) {
@@ -152,41 +145,9 @@ function randomFloat(min, max) {
     return Math.random() * (max - min) + min;
 }
 
+//text
+let text = 'Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet';
+ctx.font = "20px arial";
 
-
-let text = 'Lorem ipsum dolor sit amet.';
-let x = canvas.width/2;
-let y = canvas.height/2;
-
-for (let i = 1; i < 10; i++) {
-    let radius = i * 40;
-    let start = randomFloat(0, 2*Math.PI);
-    let end = randomFloat(1.5, 2) * start;
-    let forward;
-    let flowControl = randomFloat(0, 1); // variable to control forward true or false
-    let typeControl = randomFloat(0, 1); // variable to control fill or stroke text
-    if (flowControl >= 0.5) {
-        
-        forward = true;
-
-    } else{
-        
-        forward = false;
-    
-    }
-    
-    ctx.font = `${randomInteger(20, 60)}px arial`;
-    
-    if (typeControl >= 0.5) {
-        
-        ctx.fillCircleText(text, x, y, radius, start, end, forward)
-
-    } else{
-        
-        ctx.strokeCircleText(text, x, y, radius, start, end, forward)
-    
-    }
-
-    console.log(flowControl);
-    
-}
+textOnCurve(text, 10, 100, 500, 300, 450, 250, 200);
+curveHelper(100, 500, 300, 450, 250, 200);
