@@ -27,76 +27,38 @@ let colorArray = [
     "#d94c1a",
 ]
 
-// centerX, centerY: the center point of the star 
-// points: the number of points on the exterior of the star 
-// inner: the radius of the inner points of the star 
-// outer: the radius of the outer points of the star 
-// fill, stroke: the fill and stroke colors to apply 
-// line: the linewidth of the stroke
-function drawStar(centerX, centerY, points, outer, inner, fill, stroke, line) {    
-    // define the star
+function drawRegularPolygon(sideCount,radius,centerX,centerY,strokeWidth,strokeColor,fillColor,rotationRadians){
+    
+    var angles=Math.PI*2/sideCount;
+    ctx.translate(centerX,centerY);
+    ctx.rotate(rotationRadians);
     ctx.beginPath();
-    ctx.moveTo(centerX, centerY+outer);
-    for (var i=0; i < 2*points+1; i++) {
-        var r = (i%2 == 0)? outer : inner;
-        var a = Math.PI * i/points;
-        ctx.lineTo(centerX + r*Math.sin(a), centerY + r*Math.cos(a));
-    };
-    ctx.closePath();    // draw
-    ctx.fillStyle=fill;
+    ctx.moveTo(radius,0);
+    for(var i=1;i<sideCount;i++){
+        ctx.rotate(angles);
+        ctx.lineTo(radius,0);
+    }
+    ctx.closePath();
+    ctx.fillStyle=fillColor;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = strokeWidth;
+    ctx.stroke();
     ctx.fill();
-    ctx.strokeStyle=stroke;
-    ctx.lineWidth=line;
-    ctx.stroke()
+    ctx.rotate(angles*-(sideCount-1));
+    ctx.rotate(-rotationRadians);
+    ctx.translate(-centerX,-centerY);
 }
 
 // Usage:
-// drawStar(75,75,5,50,25,'mediumseagreen','gray',3);
-// drawStar(150,200,8,50,25,'skyblue','gray',3);
-// drawStar(225,75,16,50,20,'coral','transparent',0); 
-// drawStar(300,200,16,50,40,'gold','gray',3)
+drawRegularPolygon(3,50,100,100,6,'gray','red',0);
+drawRegularPolygon(5,50,250,100,6,'gray','gold',0);
+drawRegularPolygon(6,50,400,100,6,'gray','lightblue',0);
+drawRegularPolygon(7,50,550,100,6,'gray','lightgreen',0);
+drawRegularPolygon(8,50,700,100,6,'gray','tomato',0);
+drawRegularPolygon(9,50,100,300,6,'gray','purple',0);
+drawRegularPolygon(10,50,250,300,6,'gray','teal',0);
+drawRegularPolygon(11,50,400,300,6,'gray','orange',0);
+drawRegularPolygon(12,50,550,300,6,'gray','seagreen',0);
+drawRegularPolygon(13,50,700,300,6,'gray','skyblue',0);
+drawRegularPolygon(14,50,100,500,6,'gray','tomato',0);
 
-let centerXArray = [];
-let centerYArray = [];
-let checkXArray = [];
-let checkYArray = [];
-
-for (let i = 0; i < 20; i++) {
-    let centerX = randomInteger(100, 750);
-    let centerY = randomInteger(100, 750);
-    
-    // code to make sure no two stars overlap, SUBJECT TO REVIEW
-    // do {
-        
-    //     for (let i = (centerX - 120); i <= (centerX + 120); i++) {
-    //         checkX = centerXArray.includes(centerX);
-    //         if (checkX == true) {
-    //             checkXArray.push(1);            
-    //         } else{
-    //             checkXArray.push(0);            
-    //         }
-    //     }
-        
-    //     // check if value 120 pixels greater or less than centerY eYist in centerXArray
-    //     for (let i = (centerY - 120); i <= (centerY + 120); i++) {
-    //         checkY = centerYArray.includes(centerY);
-    //         if (checkY == true) {
-    //             checkYArray.push(1);            
-    //         } else{
-    //             checkYArray.push(0);            
-    //         }
-    //     }
-        
-    // } while (checkXArray.includes(1) == true && checkYArray.includes(1) == true);
-
-    // centerXArray.push(centerX);
-    // centerYArray.push(centerY);
-    let points = randomInteger(5, 15);
-    let outer = randomInteger(40, 60);
-    let inner = randomInteger((outer - 20), (outer - 4));
-    let fill = colorArray[randomInteger(0, 5)];
-    let stroke = fill;
-    let line = randomInteger(0, 7);
-
-    drawStar(centerX, centerY, points, outer, inner, fill, stroke, line);
-}
