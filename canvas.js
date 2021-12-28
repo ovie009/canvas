@@ -119,6 +119,16 @@ let pentagon = [
 ];
 let pentagonRadius = 30;
 
+let hexagon = [
+    {x: 450, y: 450},
+    {x: 575, y: 450},
+    {x: 625, y: 550},
+    {x: 575, y: 650},
+    {x: 450, y: 650},
+    {x: 400, y: 550},
+];
+let hexagonRadius = 50;
+
 // draw triangle
 ctx.lineWidth = 4;
 ctx.fillStyle = 'teal';
@@ -155,6 +165,16 @@ ctx.fillStyle = 'seagreen';
 ctx.strokeStyle = 'black';
 ctx.beginPath();
 roundedPoly(pentagon, pentagonRadius);
+ctx.fill();
+ctx.stroke();
+ctx.closePath();
+
+// draw hexagon
+ctx.lineWidth = 5;
+ctx.fillStyle = 'darkslategray';
+ctx.strokeStyle = 'black';
+ctx.beginPath();
+roundedPoly(hexagon, hexagonRadius);
 ctx.fill();
 ctx.stroke();
 ctx.closePath();
