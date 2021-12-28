@@ -19,162 +19,84 @@ function randomFloat(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-var roundedPoly = function(points,radius){
-    var i, x, y, len, p1, p2, p3, v1, v2, sinA, sinA90, radDirection, drawDirection, angle, halfAngle, cRadius, lenOut;
-    var asVec = function (p, pp, v) {//convert points to a line with len and normalised        
-        v.x = pp.x - p.x; // x,y as vec 
-        v.y = pp.y - p.y;
-        v.len = Math.sqrt(v.x * v.x + v.y * v.y); // length of vec 
-        v.nx = v.x / v.len; // normalised        
-        v.ny = v.y / v.len;
-        v.ang = Math.atan2(v.ny, v.nx); // direction of vec
-    }
-    v1 = {};
-    v2 = {};
-    len = points.length;                         // number points
-    p1 = points[len - 1];                        // start at end of path
-    for (i = 0; i < len; i++) {                  // do each corner
-        p2 = points[(i) % len];                  // the corner point that is being rounded
-        p3 = points[(i + 1) % len];        
-        // get the corner as vectors out away from corner
-        asVec(p2, p1, v1);                       // vec back from corner point
-        asVec(p2, p3, v2);                       // vec forward from corner point
-        // get corners cross product (asin of angle)
-        sinA = v1.nx * v2.ny - v1.ny * v2.nx;    // cross product
-        // get cross product of first line and perpendicular second line
-        sinA90 = v1.nx * v2.nx - v1.ny * -v2.ny; // cross product to normal of line 2
-        angle = Math.asin(sinA);                 // get the angle
-        radDirection = 1;                        // may need to reverse the radius
-        drawDirection = false;                   // may need to draw the arc anticlockwise
-        // find the correct quadrant for circle center        
-        if (sinA90 < 0) {
-            if (angle < 0) {
-                angle = Math.PI + angle; // add 180 to move us to the 3 quadrant
-            } else {
-                angle = Math.PI - angle; // move back into the 2nd quadrant
-                radDirection = -1;
-                drawDirection = true;
-            }
-        } else {
-            if (angle > 0) {
-                radDirection = -1;
-                drawDirection = true;
-            }
-        }
-        halfAngle = angle / 2;
-        // get distance from corner to point where round corner touches line
-        lenOut = Math.abs(Math.cos(halfAngle) * radius / Math.sin(halfAngle));
-        if (lenOut > Math.min(v1.len / 2, v2.len / 2)) { // fix if longer than half line length            
-            lenOut = Math.min(v1.len / 2, v2.len / 2);
-            // ajust the radius of corner rounding to fit
-            cRadius = Math.abs(lenOut * Math.sin(halfAngle) / Math.cos(halfAngle));
-        } else {
-            cRadius = radius;
-        }
-        x = p2.x + v2.nx * lenOut; // move out from corner along second line to point where rounded circle touches
-        y = p2.y + v2.ny * lenOut;
-        x += -v2.ny * cRadius * radDirection; // move away from line to circle center
-        y += v2.nx * cRadius * radDirection;
-        // x,y is the rounded corner circle center
-        ctx.arc(x, y, cRadius, v1.ang + Math.PI / 2 * radDirection, v2.ang - Math.PI / 2 * radDirection, drawDirection); // draw the arc clockwise
-        p1 = p2;
-        p2 = p3;
-    }
-    ctx.closePath();
+let colorArray = [
+    "#d7d8c9",
+    "#a4a68a",
+    "#f2be24",
+    "#57523e",
+    "#d94c1a",
+]
+
+// centerX, centerY: the center point of the star 
+// points: the number of points on the exterior of the star 
+// inner: the radius of the inner points of the star 
+// outer: the radius of the outer points of the star 
+// fill, stroke: the fill and stroke colors to apply 
+// line: the linewidth of the stroke
+function drawStar(centerX, centerY, points, outer, inner, fill, stroke, line) {    
+    // define the star
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY+outer);
+    for (var i=0; i < 2*points+1; i++) {
+        var r = (i%2 == 0)? outer : inner;
+        var a = Math.PI * i/points;
+        ctx.lineTo(centerX + r*Math.sin(a), centerY + r*Math.cos(a));
+    };
+    ctx.closePath();    // draw
+    ctx.fillStyle=fill;
+    ctx.fill();
+    ctx.strokeStyle=stroke;
+    ctx.lineWidth=line;
+    ctx.stroke()
 }
 
-let triangle = [
-    {x: 200, y: 50},
-    {x: 300, y: 200},
-    {x: 100, y: 200}
-];
-let triangleRadius = 30;
+// Usage:
+// drawStar(75,75,5,50,25,'mediumseagreen','gray',3);
+// drawStar(150,200,8,50,25,'skyblue','gray',3);
+// drawStar(225,75,16,50,20,'coral','transparent',0); 
+// drawStar(300,200,16,50,40,'gold','gray',3)
 
-let upArrow = [
-    {x: 500, y: 50},
-    {x: 600, y: 200},
-    {x: 540, y: 200},
-    {x: 540, y: 250},
-    {x: 460, y: 250},
-    {x: 460, y: 200},
-    {x: 400, y: 200}
-];
-let upArrowRadius = 10;
+let centerXArray = [];
+let centerYArray = [];
+let checkXArray = [];
+let checkYArray = [];
 
+for (let i = 0; i < 20; i++) {
+    let centerX = randomInteger(100, 750);
+    let centerY = randomInteger(100, 750);
+    
+    // code to make sure no two stars overlap, SUBJECT TO REVIEW
+    // do {
+        
+    //     for (let i = (centerX - 120); i <= (centerX + 120); i++) {
+    //         checkX = centerXArray.includes(centerX);
+    //         if (checkX == true) {
+    //             checkXArray.push(1);            
+    //         } else{
+    //             checkXArray.push(0);            
+    //         }
+    //     }
+        
+    //     // check if value 120 pixels greater or less than centerY eYist in centerXArray
+    //     for (let i = (centerY - 120); i <= (centerY + 120); i++) {
+    //         checkY = centerYArray.includes(centerY);
+    //         if (checkY == true) {
+    //             checkYArray.push(1);            
+    //         } else{
+    //             checkYArray.push(0);            
+    //         }
+    //     }
+        
+    // } while (checkXArray.includes(1) == true && checkYArray.includes(1) == true);
 
-let square = [
-    {x: 125, y: 250},
-    {x: 275, y: 250},
-    {x: 275, y: 400},
-    {x: 125, y: 400}
-];
-let squareRadius = 30;
+    // centerXArray.push(centerX);
+    // centerYArray.push(centerY);
+    let points = randomInteger(5, 15);
+    let outer = randomInteger(40, 60);
+    let inner = randomInteger((outer - 20), (outer - 4));
+    let fill = colorArray[randomInteger(0, 5)];
+    let stroke = fill;
+    let line = randomInteger(0, 7);
 
-let pentagon = [
-    {x: 200, y: 450},
-    {x: 300, y: 550},
-    {x: 250, y: 650},
-    {x: 150, y: 650},
-    {x: 100, y: 550},
-];
-let pentagonRadius = 30;
-
-let hexagon = [
-    {x: 450, y: 450},
-    {x: 575, y: 450},
-    {x: 625, y: 550},
-    {x: 575, y: 650},
-    {x: 450, y: 650},
-    {x: 400, y: 550},
-];
-let hexagonRadius = 50;
-
-// draw triangle
-ctx.lineWidth = 4;
-ctx.fillStyle = 'teal';
-ctx.strokeStyle = 'black';
-ctx.beginPath();
-roundedPoly(triangle, triangleRadius);
-ctx.fill();
-ctx.stroke();
-ctx.closePath();
-
-// draw uparrow
-ctx.lineWidth = 4;
-ctx.fillStyle = 'rebeccapurple';
-ctx.strokeStyle = 'black';
-ctx.beginPath();
-roundedPoly(upArrow, upArrowRadius);
-ctx.fill();
-ctx.stroke();
-ctx.closePath();
-
-// draw square
-ctx.lineWidth = 4;
-ctx.fillStyle = 'tomato';
-ctx.strokeStyle = 'black';
-ctx.beginPath();
-roundedPoly(square, squareRadius);
-ctx.fill();
-ctx.stroke();
-ctx.closePath();
-
-// draw pentagon
-ctx.lineWidth = 4;
-ctx.fillStyle = 'seagreen';
-ctx.strokeStyle = 'black';
-ctx.beginPath();
-roundedPoly(pentagon, pentagonRadius);
-ctx.fill();
-ctx.stroke();
-ctx.closePath();
-
-// draw hexagon
-ctx.lineWidth = 5;
-ctx.fillStyle = 'darkslategray';
-ctx.strokeStyle = 'black';
-ctx.beginPath();
-roundedPoly(hexagon, hexagonRadius);
-ctx.fill();
-ctx.stroke();
-ctx.closePath();
+    drawStar(centerX, centerY, points, outer, inner, fill, stroke, line);
+}
