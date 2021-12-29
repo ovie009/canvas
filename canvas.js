@@ -27,21 +27,54 @@ let colorArray = [
     "#d94c1a",
 ]
 
-// load image 1
-let image = new Image();
-image.src = "comics_hall-20200413-0007.jpg"; //load image
+ctx.beginPath();
+ctx.lineWidth = 9;
+ctx.lineCap = 'round'; // "butt" (default), 'square'
+//lineCap, styles the end of the line
+ctx.lineTo(200, 200);
+ctx.lineTo(300, 300);
+ctx.stroke();
 
-image.onload = function () { //when loaded
-    let pattern = ctx.createPattern(image, 'repeat'); 
-    // "repeat-x", "repeat-y" and "repaet-none" can also be passed as the second parameter
-    ctx.moveTo(300, 300);
-    ctx.lineTo(500, 500);
-    ctx.lineTo(100, 500);
-    ctx.lineTo(300, 300);
+ctx.beginPath();
+ctx.lineWidth = 9;
+ctx.lineCap = 'square'; // "butt" (default), 'square'
+//lineCap, styles the end of the line
+ctx.lineTo(300, 200);
+ctx.lineTo(400, 300);
+ctx.stroke();
 
-    // clip future drawings to appear only in the triangle
-    ctx.clip();
+ctx.beginPath();
+ctx.lineWidth = 9;
+ctx.lineCap = 'butt'; // "butt" (default), 'square'
+//lineCap, styles the end of the line
+ctx.lineTo(100, 200);
+ctx.lineTo(200, 300);
+ctx.stroke();
 
-    //draw an image
-    ctx.drawImage(image, 0, 0);
-};
+
+ctx.beginPath();
+ctx.lineWidth = 9;
+ctx.lineJoin = 'round'; // "miter" (default), 'bevel'
+//lineCap, styles the end of the line
+ctx.lineTo(400, 200);
+ctx.lineTo(450, 250);
+ctx.lineTo(500, 200);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.lineWidth = 9;
+ctx.lineJoin = 'bevel'; // "miter" (default), 'bevel'
+//lineCap, styles the end of the line
+ctx.lineTo(550, 200);
+ctx.lineTo(600, 250);
+ctx.lineTo(650, 200);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.lineWidth = 9;
+ctx.lineJoin = 'miter'; // "miter" (default), 'bevel'
+//lineCap, styles the end of the line
+ctx.lineTo(700, 200);
+ctx.lineTo(750, 250);
+ctx.lineTo(800, 200);
+ctx.stroke();
