@@ -27,6 +27,15 @@ let colorArray = [
     "#d94c1a",
 ]
 
+let linearGradient = ctx.createLinearGradient(300, 100, 450, 400);
+linearGradient.addColorStop(0, 'orange');
+linearGradient.addColorStop(1, 'teal');
+
+let radialGradient = ctx.createRadialGradient(450, 450, 25, 450, 450, 50);
+radialGradient.addColorStop(0, 'rebeccapurple');
+radialGradient.addColorStop(1, 'tomato');
+ctx.strokeStyle = linearGradient;
+
 ctx.beginPath();
 ctx.lineWidth = 9;
 ctx.lineCap = 'round'; // "butt" (default), 'square'
@@ -78,3 +87,8 @@ ctx.lineTo(700, 200);
 ctx.lineTo(750, 250);
 ctx.lineTo(800, 200);
 ctx.stroke();
+
+ctx.beginPath()
+ctx.rect(400, 400, 100, 100);
+ctx.fillStyle = radialGradient;
+ctx.fill();
