@@ -27,31 +27,26 @@ let colorArray = [
     "#d94c1a",
 ]
 
-// load image 1
-let img1 = new Image();
-img1.onload = start;
-img1.onerror = function () {
-    alert(img1.src+' failed');
+function cropImage(image, croppingCoords) {
+    var cc = croppingCoords;
+    var workCan = document.createElement("canvas"); // create a canvas
+    workCan.width = Math.floor(cc.width);  // set the canvas resolution to the cropped image size
+    workCan.height = Math.floor(cc.height);
+    var ctx = workCan.getContext("2d");    // get a 2D rendering interface    
+    ctx.drawImage(image, -Math.floor(cc.x), -Math.floor(cc.y)); // draw the image offset to place it correctly on the cropped region
+    image.src = workCan.toDataURL();       // set the image source to the canvas as a data URL
+    return image; 
 }
-img1.src = "file://myLocalImage.png"; //adding image from outside the domain
 
 // load image 2
 let img2 = new Image();
-img2.onload = start;
-img2.onerror = function () {
-    alert(img2.src+' failed');
-}
-img2.src = "comics_hall-20200413-0007.jpg";
-let imgCount = 2;
-
-// start is called everytime an image loads
-function start() {
-    // countdown until all images are loaded
-    if (--imgCount > 0) {
-        return;
-    }
-    // all the images are now successfully loaded
-    // context.drawImage will successfully draw each one
-    ctx.drawImage(img1, 0, 0);
-    ctx.getImageData(0, 0, canvas.width, canvas.height);
-}
+img2.src = "comics_hall-20200413-0007.jpg"; //load image
+img2.onload = function () { //when loaded
+    cropImage(this, {
+        x: this.width/4, //crop keeping the center
+        y: this.height/4, 
+        width: this.width/2, 
+        height: this.height/2, 
+    });    
+    document.body.appendChild(this); //add the image to the DOM
+};
