@@ -4,14 +4,10 @@
 //canvas variable
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
-let canvas2 = document.getElementById("canvasFill");
-let ctx2 = canvas2.getContext("2d");
-let canvas3 = document.getElementById("canvasFit");
-let ctx3 = canvas3.getContext("2d");
 canvas.width = window.innerWidth - 10;
 canvas.height = window.innerHeight - 10;
-canvas.width = 850;
-canvas.height = 850;
+// canvas.width = 500;
+// canvas.height = 500;
 
 //random integer
 function randomInteger(min, max) {
@@ -31,36 +27,24 @@ let colorArray = [
     "#d94c1a",
 ]
 
-//scale to fit
-function scaleToFit(img, canvas, ctx){
-    // get the scale
-    var scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-    // get the top left position of the image
-    var x = (canvas.width / 2) - (img.width / 2) * scale;
-    var y = (canvas.height / 2) - (img.height / 2) * scale;
-    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-}
-
-//scale to fill
-function scaleToFill(img, canvas, ctx){
-    // get the scale
-    var scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-    // get the top left position of the image
-    var x = (canvas.width / 2) - (img.width / 2) * scale;
-    var y = (canvas.height / 2) - (img.height / 2) * scale;
-    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-}
-
 // load image 1
-let img1 = new Image();
-img1.src = "xidingart-20200413-0001.jpg"; //load image
-img1.onload = function () { //when loaded
-    scaleToFill(this, canvas2, ctx2)
+let image = new Image();
+image.src = "drone.png"; //load image
+
+image.onload = function () { //when loaded
+    let pattern = ctx.createPattern(image, 'repeat'); 
+    // "repeat-x", "repeat-y" and "repaet-none" can also be passed as the second parameter
+    ctx.moveTo(0, 0);
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'seagreen';
+    ctx.fillStyle = pattern;
+    ctx.fill();
 };
 
-// load image 2
-let img2 = new Image();
-img2.src = "texte-20210420-0001.jpg"; //load image
-img2.onload = function () { //when loaded
-    scaleToFill(this, canvas, ctx)
-};
+// let image = document.getElementById("drone");
+// let pattern = ctx.createPattern(image, 'repeat');
+// ctx.moveTo(0, 0);
+// ctx.rect(0, 0, canvas.width, canvas.height);
+// ctx.fillStyle = 'seagreen';
+// ctx.fillStyle = pattern;
+// ctx.fill();
