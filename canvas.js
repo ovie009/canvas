@@ -29,22 +29,19 @@ let colorArray = [
 
 // load image 1
 let image = new Image();
-image.src = "drone.png"; //load image
+image.src = "comics_hall-20200413-0007.jpg"; //load image
 
 image.onload = function () { //when loaded
     let pattern = ctx.createPattern(image, 'repeat'); 
     // "repeat-x", "repeat-y" and "repaet-none" can also be passed as the second parameter
-    ctx.moveTo(0, 0);
-    ctx.rect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'seagreen';
-    ctx.fillStyle = pattern;
-    ctx.fill();
-};
+    ctx.moveTo(300, 300);
+    ctx.lineTo(500, 500);
+    ctx.lineTo(100, 500);
+    ctx.lineTo(300, 300);
 
-// let image = document.getElementById("drone");
-// let pattern = ctx.createPattern(image, 'repeat');
-// ctx.moveTo(0, 0);
-// ctx.rect(0, 0, canvas.width, canvas.height);
-// ctx.fillStyle = 'seagreen';
-// ctx.fillStyle = pattern;
-// ctx.fill();
+    // clip future drawings to appear only in the triangle
+    ctx.clip();
+
+    //draw an image
+    ctx.drawImage(image, 0, 0);
+};
