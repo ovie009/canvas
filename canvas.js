@@ -33,7 +33,7 @@ img1.onload = start;
 img1.onerror = function () {
     alert(img1.src+' failed');
 }
-img1.src = "xidingart-20200413-0001.jpg";
+img1.src = "file://myLocalImage.png"; //adding image from outside the domain
 
 // load image 2
 let img2 = new Image();
@@ -53,5 +53,5 @@ function start() {
     // all the images are now successfully loaded
     // context.drawImage will successfully draw each one
     ctx.drawImage(img1, 0, 0);
-    ctx.drawImage(img2, 0, canvas.height/2);
+    ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
