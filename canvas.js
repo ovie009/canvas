@@ -49,12 +49,6 @@ canvas.onresize = function (e) { reOffset(); }
 
 // array to store information about shapes drawn on the canvas
 let shapes = [];
-// define one circle and save it in the shapes[] array
-shapes.push( {x: 30, y: 30, radius: 15, color: 'blue'} );
-// define one rectangle and save it in the shapes[] array
-shapes.push( {x: 100, y: -1, width: 75, height: 35, color: 'red'} );
-// define one triangle path and save it to the shapes[] array
-shapes.push( {x: 0, y: 0, points: [{x: 50, y: 30}, {x: 75, y: 60}, {x: 25, y: 60}], color: 'green'} );
 
 // drag related variables
 let isDragging = false;
@@ -63,31 +57,29 @@ let startX, startY;
 // hold the index of the shape being dragged (if any)
 let selectedShapeIndex;
 
-//draw the shapes on the canvas
-drawAll();
-
-// listen to mouse events on the canvas
-canvas.onmousedown = handleMouseDown;
-canvas.onmousemove = handleMouseMove;
-canvas.onmouseup = handleMouseUp;
-canvas.onmouseout = handleMouseOut;
+let card = new Image();
+// image source
+card.src = '/comics_hall-20200413-0007.jpg';
+card.onload = function () {
+    // define one image and save it in the shapes array
+    shapes.push( {x: centerX - 140, y: centerY - 150, width: 280, height: 300, image: card} )
+    
+    //draw the shapes on the canvas
+    drawAll();
+    // listen to mouse events on the canvas
+    canvas.onmousedown = handleMouseDown;
+    canvas.onmousemove = handleMouseMove;
+    canvas.onmouseup = handleMouseUp;
+    canvas.onmouseout = handleMouseOut;
+}
 
 
 // given mouse X & Y (mx & my) and shape object
 // return true/false whether mouse is inside the shape
 function isMouseInShape(mx, my, shape) {
     
-    if(shape.radius){
-        // this is a circle
-        let dx = mx - shape.x
-        let dy = my - shape.y;
-
-        //  math text to see if mouse is inside circle
-        if (dx*dx + dy*dy < shape.radius*shape.radius) {
-            // yes, mouse is inside this circle
-            return(true);
-        }
-    } else if (shape.width) {
+    if (shape.image) {
+        // this is an image
         // this is a rectangle
         let rLeft = shape.x;
         let rRight = shape.x + shape.width;
@@ -97,14 +89,7 @@ function isMouseInShape(mx, my, shape) {
         if (mx > rLeft && mx < rRight && my > rTop && my < rBot) {
             return(true);
         }
-    } else if(shape.points){
-        // this is a polyline path
-        // first redefine the path again (no need to stroke/fill!)
-        defineIrregularPath(shape);
-        // then hit-test with isPointInPath
-        if (ctx.isPointInPath(mx, my)) {
-            return(true);
-        }
+        
     }
     // the mouse isn't in any of the shapes
     return(false);
@@ -185,24 +170,9 @@ function drawAll() {
     ctx.clearRect(0, 0, cw, ch);
     for (let i = 0; i < shapes.length; i++) {
         let shape = shapes[i];
-
-        if(shape.radius){
-            // its a circle
-            ctx.beginPath();
-            ctx.arc(shape.x, shape.y, shape.radius, 0, Math.PI*2);
-            ctx.fillStyle = shape.color;
-            ctx.fill();
-        
-        } else if (shape.width) {
-            // it's a rectangle
-            ctx.beginPath();
-            ctx.fillStyle = shape.color;
-            ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
-        } else if (shape.points) {
-            // its a polyline path
-            defineIrregularPath(shape);
-            ctx.fillStyle = shape.color;
-            ctx.fill();
+         if (shape.image) {
+            // it's an image
+            ctx.drawImage(shape.image, shape.x, shape.y, shape.width, shape.height);
         }
         
     }
