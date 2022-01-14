@@ -53,6 +53,8 @@ let shapes = [];
 shapes.push( {x: 30, y: 30, radius: 15, color: 'blue'} );
 // define one rectangle and save it in the shapes[] array
 shapes.push( {x: 100, y: -1, width: 75, height: 35, color: 'red'} );
+// define one triangle path and save it to the shapes[] array
+shapes.push( {x: 0, y: 0, points: [{x: 50, y: 30}, {x: 75, y: 60}, {x: 25, y: 60}], color: 'green'} );
 
 // drag related variables
 let isDragging = false;
@@ -95,11 +97,18 @@ function isMouseInShape(mx, my, shape) {
         if (mx > rLeft && mx < rRight && my > rTop && my < rBot) {
             return(true);
         }
-    } 
+    } else if(shape.points){
+        // this is a polyline path
+        // first redefine the path again (no need to stroke/fill!)
+        defineIrregularPath(shape);
+        // then hit-test with isPointInPath
+        if (ctx.isPointInPath(mx, my)) {
+            return(true);
+        }
+    }
     // the mouse isn't in any of the shapes
     return(false);
 }
-
 
 function handleMouseDown(e) {
     // tell the browser we are handling this event
@@ -162,7 +171,7 @@ function handleMouseMove(e){
     selectedShape.x+=dx;
     selectedShape.y+=dy;
     
-    console.log(isDragging);
+    // console.log(isDragging);
     // clear the canvas and redraw all shapes
     drawAll();
     // update the starting drag position (== the current mouse position)
@@ -189,7 +198,22 @@ function drawAll() {
             ctx.beginPath();
             ctx.fillStyle = shape.color;
             ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
+        } else if (shape.points) {
+            // its a polyline path
+            defineIrregularPath(shape);
+            ctx.fillStyle = shape.color;
+            ctx.fill();
         }
         
     }
+}
+
+function defineIrregularPath(shape) {
+    let points = shape.points;
+    ctx.beginPath();
+    ctx.moveTo(shape.x + points[0].x, shape.y + points[0].y);
+    for (let i = 0; i < points.length; i++) {
+        ctx.lineTo(shape.x + points[i].x, shape.y + points[i].y)
+    }
+    ctx.closePath();
 }
