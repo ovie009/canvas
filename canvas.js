@@ -1,6 +1,3 @@
-//chapter 3
-// Polygons
-
 //canvas variable
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
@@ -25,165 +22,88 @@ function randomFloat(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-let colorArray = [
-    "#d7d8c9",
-    "#a4a68a",
-    "#f2be24",
-    "#57523e",
-    "#d94c1a",
-]
+let videoContainer; //object to hold video and associated info
+let video = document.createElement("video"); // create a video element
+video.src = "cats__black-20210403-0002.mp4";
+video.src = "logicalstops.webm";
+// the video will now begin to load.
+// As some additional info is needed we will place the video in a
+// containing object for convenience
+video.autoPlay = false; // ensure that the video does not auto play
+video.loop = true; // set the video to loop.
+videoContainer = { // we will add properties as needed
+    video : video,
+    ready : false,
+};
 
-// used to calculate the position relative to window
-function reOffset() {
-    let BB = canvas.getBoundingClientRect();
-    offsetX = BB.left;
-    offsetY = BB.top;
+// triggered when begining of video has been loaded
+//video.oncanplay = readyToPlayVideo; // set the event to the play function that can be found below
+
+// triggered when full of video has been loaded
+video.oncanplaythrough = readyToPlayVideo; // set the event to the play function that can be found below
+
+function readyToPlayVideo(event) {// thsi is a reference to the video
+    console.log("Video ready to Play")
+    // the video may not match the canvas size so find a scale to fit
+    videoContainer.scale = Math.min(
+        cw / this.videoWidth,
+        ch / this.videoHeight
+        // cw,
+        // ch
+    );
+    videoContainer.ready = true;
+    // the video can be played so hand it off to the display function
+    requestAnimationFrame(updateCanvas);
 }
 
-let offsetX, offsetY;
-reOffset();
+function updateCanvas() {
+    ctx.clearRect(0, 0, cw, ch); 
+    // Though not always needed, you may get bad pixels from previous videos so clear to be safe
 
-window.onscroll = function (e) { reOffset(); }
-window.onresize = function (e) { reOffset(); }
-canvas.onresize = function (e) { reOffset(); }
-
-// array to store information about shapes drawn on the canvas
-let shapes = [];
-
-// drag related variables
-let isDragging = false;
-let startX, startY;
-
-// hold the index of the shape being dragged (if any)
-let selectedShapeIndex;
-
-let card = new Image();
-// image source
-card.src = '/comics_hall-20200413-0007.jpg';
-card.onload = function () {
-    // define one image and save it in the shapes array
-    shapes.push( {x: centerX - 140, y: centerY - 150, width: 280, height: 300, image: card} )
-    
-    //draw the shapes on the canvas
-    drawAll();
-    // listen to mouse events on the canvas
-    canvas.onmousedown = handleMouseDown;
-    canvas.onmousemove = handleMouseMove;
-    canvas.onmouseup = handleMouseUp;
-    canvas.onmouseout = handleMouseOut;
-}
-
-
-// given mouse X & Y (mx & my) and shape object
-// return true/false whether mouse is inside the shape
-function isMouseInShape(mx, my, shape) {
-    
-    if (shape.image) {
-        // this is an image
-        // this is a rectangle
-        let rLeft = shape.x;
-        let rRight = shape.x + shape.width;
-        let rTop = shape.y;
-        let rBot = shape.y+shape.height;
-        
-        if (mx > rLeft && mx < rRight && my > rTop && my < rBot) {
-            return(true);
-        }
-        
-    }
-    // the mouse isn't in any of the shapes
-    return(false);
-}
-
-function handleMouseDown(e) {
-    // tell the browser we are handling this event
-    e.preventDefault();
-    e.stopPropagation();
-    // calculate the current mouse propagation
-    startX = parseInt(e.clientX - offsetX);
-    startY = parseInt(e.clientY - offsetY);
-    // test mouse position against all shapes
-    // post result if mouse is in a shape
-
-    for (let i = 0; i < shapes.length; i++) {
-        if (isMouseInShape(startX, startY, shapes[i])) {
-            // the mouse is inside this shape
-            // select this image
-            selectedShapeIndex = i;
-            // set the isDragging Flag
-            isDragging = true;
-            // and return ( stop looking for further shapes under the mouse)
-            return;
+    // only draw if loaded and ready
+    if (videoContainer !== undefined && videoContainer.readyToPlayVideo) {
+        // find the top left of the video on the canvas
+        let scale = videoContainer.scale;
+        let vidH = videoContainer.video.videoHeight;
+        let vidW = videoContainer.video.videoWidth;
+        let top = ch / 2 - (vidH/2) * scale;
+        let left = cw / 2 - (vidW/2) * scale;
+        // now just draw the video the correct size
+        ctx.drawImage(videoContainer.video, left, top, vidW * scale, vidH * scale);
+        if (videoContainer.video.paused) { //if mot playing show the paused screen
+            drawPlayIcon();
         }
     }
+    // all done for display
+    // request the next frame in 1/60th of a second
+    requestAnimationFrame(updateCanvas);
 }
 
-function handleMouseUp(e) {
-    // return if we are not dragging
-    if(!isDragging){return;}
-    // tell the browser we are handling this event
-    e.preventDefault();
-    e.stopPropagation();
-    // the drag is over -- clear the isDragging flag
-    isDragging = false;
-}
-
-function handleMouseOut(e) {
-    // return if we are not dragging
-    if(!isDragging){return;}
-    // tell the browser we are handling this event
-    e.preventDefault();
-    e.stopPropagation();
-    // the drag is over -- clear the isDragging flag
-    isDragging = false;
-}
-
-function handleMouseMove(e){
-    // return if we're not dragging
-    if(!isDragging){return;}
-    console.log(e);
-    // tell the browser we're handling this event
-    e.preventDefault();
-    e.stopPropagation();
-    // calculate the current mouse position
-    mouseX=parseInt(e.clientX-offsetX);
-    mouseY=parseInt(e.clientY-offsetY);
-    // how far has the mouse dragged from its previous mousemove position?
-    let dx = mouseX - startX;
-    let dy = mouseY - startY;
-    // move the selected shape by the drag distance
-    let selectedShape=shapes[selectedShapeIndex];
-    selectedShape.x+=dx;
-    selectedShape.y+=dy;
-    
-    // console.log(isDragging);
-    // clear the canvas and redraw all shapes
-    drawAll();
-    // update the starting drag position (== the current mouse position)
-    startX=mouseX;
-    startY=mouseY;
-}
-
-//clear the canvas and
-// redraw all shapes in their current position
-function drawAll() {
-    ctx.clearRect(0, 0, cw, ch);
-    for (let i = 0; i < shapes.length; i++) {
-        let shape = shapes[i];
-         if (shape.image) {
-            // it's an image
-            ctx.drawImage(shape.image, shape.x, shape.y, shape.width, shape.height);
-        }
-        
-    }
-}
-
-function defineIrregularPath(shape) {
-    let points = shape.points;
-    ctx.beginPath();
-    ctx.moveTo(shape.x + points[0].x, shape.y + points[0].y);
-    for (let i = 0; i < points.length; i++) {
-        ctx.lineTo(shape.x + points[i].x, shape.y + points[i].y)
-    }
+function drawPlayIcon() {
+    ctx.fillStyle = "black"; 
+    ctx.globalApha = 0.5;
+    ctx.fillRect(0, 0, cw, ch);
+    ctx.fillStyle = "#DDD"; // colour of play icon
+    ctx.globalAlpha = 0.75; // partly transparent
+    ctx.beginPath(); //craete the path for the icon
+    let size = ( ch/2 ) * 0.5; // the size of the icon
+    ctx.moveTo( cw/2 + size/2, ch/2 ); //start at the pointy end
+    ctx.lineTo(canvas.width/2 - size/2, canvas.height / 2 + size);
+    ctx.lineTo(canvas.width/2 - size/2, canvas.height / 2 - size);
     ctx.closePath();
+    ctx.fill();
+    ctx.globalApha = 1; //restore alpha
 }
+
+function playPauseClick(){
+    if(videoContainer !== undefined && videoContainer.ready){
+        if(videoContainer.video.paused){
+        videoContainer.video.play();
+        }else{
+        videoContainer.video.pause();
+        }
+    }
+}
+// register the event
+canvas.addEventListener("click",playPauseClick);
+
