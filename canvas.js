@@ -86,10 +86,10 @@ function drawPlayIcon() {
     ctx.fillStyle = "#DDD"; // colour of play icon
     ctx.globalAlpha = 0.75; // partly transparent
     ctx.beginPath(); //craete the path for the icon
-    let size = ( ch/2 ) * 0.5; // the size of the icon
+    let size = ( ch/2 ) * 0.25; // the size of the icon
     ctx.moveTo( cw/2 + size/2, ch/2 ); //start at the pointy end
-    ctx.lineTo(canvas.width/2 - size/2, canvas.height / 2 + size);
-    ctx.lineTo(canvas.width/2 - size/2, canvas.height / 2 - size);
+    ctx.lineTo(canvas.width/2 - size/2, canvas.height / 2 + 0.8 * size);
+    ctx.lineTo(canvas.width/2 - size/2, canvas.height / 2 - 0.8 * size);
     ctx.closePath();
     ctx.fill();
     ctx.globalApha = 1; //restore alpha
