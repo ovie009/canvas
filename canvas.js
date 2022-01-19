@@ -24,8 +24,8 @@ function randomFloat(min, max) {
 
 let videoContainer; //object to hold video and associated info
 let video = document.createElement("video"); // create a video element
-video.src = "cats__black-20210403-0002.mp4";
-video.src = "logicalstops.webm";
+video.src = "black_cat.webm";
+video.src = "mens_attitude_quotes-20210706-0001.mp4";
 // the video will now begin to load.
 // As some additional info is needed we will place the video in a
 // containing object for convenience
@@ -37,10 +37,10 @@ videoContainer = { // we will add properties as needed
 };
 
 // triggered when begining of video has been loaded
-//video.oncanplay = readyToPlayVideo; // set the event to the play function that can be found below
+video.oncanplay = readyToPlayVideo; // set the event to the play function that can be found below
 
 // triggered when full of video has been loaded
-video.oncanplaythrough = readyToPlayVideo; // set the event to the play function that can be found below
+// video.oncanplaythrough = readyToPlayVideo; // set the event to the play function that can be found below
 
 function readyToPlayVideo(event) {// thsi is a reference to the video
     console.log("Video ready to Play")
@@ -61,7 +61,7 @@ function updateCanvas() {
     // Though not always needed, you may get bad pixels from previous videos so clear to be safe
 
     // only draw if loaded and ready
-    if (videoContainer !== undefined && videoContainer.readyToPlayVideo) {
+    if (videoContainer !== undefined && videoContainer.ready) {
         // find the top left of the video on the canvas
         let scale = videoContainer.scale;
         let vidH = videoContainer.video.videoHeight;
@@ -106,4 +106,5 @@ function playPauseClick(){
 }
 // register the event
 canvas.addEventListener("click",playPauseClick);
+
 
