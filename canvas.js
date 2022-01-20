@@ -32,59 +32,29 @@ let colorArray = [
 
 window.onload = (function() {
     
-
-    // animation related variables
-    let speedX = 2;     // The image  will move at 1px per loop
-    let direction = 1;  //The image direction: 1==rightward, -1==leftward
-    let y = 20;         // The Y-coordinate
-    
-    // console.log(cw);
-    
-    // load a new image
-    // IMPORTANT!!! You must give the image time to load by using img.onload!
-    let img = new Image();
-    img.onload = start;
-    img.src = "/xidingart-20210624-0001.jpg";
-    img.width = 500;
-    img.height = 600;
-    let minX = 0;      // keep the image animating
-    let maxX = cw - img.width;     // between minX & maxX
-    let x = minX;       // The current X-coordinate
-
-    function start() {
-        // the image is fully loaded so start animating
-        requestAnimationFrame(animate);
-    }
-
-    const FRAMES_PER_SECOND = 15; // Valid values are 60,30,20,15,10...
-    // set the mim time to render the next frame
-    const FRAME_MIN_TIME = (1000/60) * (60 / FRAMES_PER_SECOND) - (1000/60) * 0.5;
-    var lastFrameTime = 0; // the last frame time
-
-    function animate(time) {
-        // clear the canvas
-        ctx.clearRect(0, 0, cw, ch);
-
-        // draw
-        ctx.drawImage(img, x, y, img.width, img.height);
-
-        // update
-        x += speedX * direction;
-        // keep "x" inside min & max
-        if(x < minX){ x=minX; direction*=-1; }
-        if(x > maxX){ x=maxX; direction*=-1; }
-
-
-        if(time-lastFrameTime < FRAME_MIN_TIME){ //skip the frame if the call is too early
+    // animation interval variables
+    var nextTime=0; // the next animation begins at "nextTime"
+    var duration=1000; // run animation every 1000ms
+    var x=20; // the X where the next rect is drawn
+    // start the animation
+    requestAnimationFrame(animate);
+    function animate(currentTime){
+        // wait for nextTime to occur
+        if(currentTime<nextTime){
+            // request another loop of animation
             requestAnimationFrame(animate);
-            return; // return as there is nothing to do
+            // time hasn't elapsed so just return
+            return;
         }
-        lastFrameTime = time; // remember the time of the rendered frame
-        // render the frame
-
+        // set nextTime
+        nextTime=currentTime+duration;
+        // add another rectangle every 1000ms
+        ctx.fillStyle='#'+Math.floor(Math.random()*16777215).toString(16);
+        ctx.fillRect(x,30,30,30);
+        // update X position for next rectangle
+        x+=30;
         // request another loop of animation
         requestAnimationFrame(animate);
-        
     }
 
 }); // end $(function(){});
