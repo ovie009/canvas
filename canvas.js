@@ -30,59 +30,31 @@ let colorArray = [
     '#BF4141'
 ]
 
-window.onload=(function(){
-
-    function log(){console.log.apply(console,arguments);}
-    // canvas variables
-    // set canvas styling
-    ctx.strokeStyle='skyblue';
-    ctx.lineJoint='round';
-    ctx.lineCap='round';
-    ctx.lineWidth=6;
-    // handle windows scrolling & resizing
-    function reOffset(){
-        var BB=canvas.getBoundingClientRect();
-        offsetX=BB.left;
-        offsetY=BB.top;
+// this example assumes ctx and canvas have been created
+const textToDisplay = "Animated Text.";
+const textStyle = "white";
+const BGStyle = "black"; // background style
+const textSpeed = 0.5; // in pixels per millisecond
+const textHorMargin = 8; // have the text a little outside the canvas
+ctx.font = Math.floor(canvas.height * 0.8) + "px arial"; // size the font to 80% of canvas height
+var textWidth = ctx.measureText(textToDisplay).width; // get the text width
+var totalTextSize = (canvas.width + textHorMargin * 2 + textWidth);
+ctx.textBaseline = "middle"; // not put the text in the vertical center
+ctx.textAlign = "left"; // align to the left
+var textX = canvas.width + 8; // start with the text off screen to the right
+var textOffset = 0; // how far the text has moved
+var startTime;
+// this function is call once a frame which is approx 16.66 ms (60fps)
+function update(time){ // time is passed by requestAnimationFrame
+    if(startTime === undefined){ // get a reference for the start time if this is the first frame
+        startTime = time;
     }
+    ctx.fillStyle = BGStyle;
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // clear the canvas bydrawing over it
+    textOffset = ((time - startTime) * textSpeed) % (totalTextSize); // move the text left
+    ctx.fillStyle = textStyle; // set the text style
+    ctx.fillText(textToDisplay, textX - textOffset, canvas.height / 2); // render the text
 
-    var offsetX,offsetY;
-    reOffset();
-    window.onscroll=function(e){ reOffset(); }
-    window.onresize=function(e){ reOffset(); }
-    // vars to save points created during mousemove handling
-    var points=[];
-    var lastLength=0;
-    // start the animation loop
-    requestAnimationFrame(draw);
-    canvas.onmousemove=function(e){handleMouseMove(e);}
-    function handleMouseMove(e){
-        // tell the browser we're handling this event
-        e.preventDefault();
-        e.stopPropagation();
-        // get the mouse position
-        mouseX=parseInt(e.clientX-offsetX);
-        mouseY=parseInt(e.clientY-offsetY);
-        // save the mouse position in the points[] array
-        // but don't draw anything
-        points.push({x:mouseX,y:mouseY});
-    }
-
-    function draw(){
-        // No additional points? Request another frame an return
-        var length=points.length;
-        if(length==lastLength){requestAnimationFrame(draw);return;}
-        // draw the additional points
-        var point=points[lastLength];
-        ctx.beginPath();
-        ctx.moveTo(point.x,point.y)
-        for(var i=lastLength;i<length;i++){
-        point=points[i];
-        ctx.lineTo(point.x,point.y);
-        }
-        ctx.stroke();
-        // request another animation loop
-        requestAnimationFrame(draw);
-    }
-
-}); // end $(function(){});
+    requestAnimationFrame(update);// all done request the next frame
+}
+requestAnimationFrame(update);// to start request the first frame
