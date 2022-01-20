@@ -30,31 +30,40 @@ let colorArray = [
     '#BF4141'
 ]
 
-// this example assumes ctx and canvas have been created
-const textToDisplay = "Animated Text.";
-const textStyle = "white";
-const BGStyle = "black"; // background style
-const textSpeed = 0.5; // in pixels per millisecond
-const textHorMargin = 8; // have the text a little outside the canvas
-ctx.font = Math.floor(canvas.height * 0.8) + "px arial"; // size the font to 80% of canvas height
-var textWidth = ctx.measureText(textToDisplay).width; // get the text width
-var totalTextSize = (canvas.width + textHorMargin * 2 + textWidth);
-ctx.textBaseline = "middle"; // not put the text in the vertical center
-ctx.textAlign = "left"; // align to the left
-var textX = canvas.width + 8; // start with the text off screen to the right
-var textOffset = 0; // how far the text has moved
-var startTime;
-// this function is call once a frame which is approx 16.66 ms (60fps)
-function update(time){ // time is passed by requestAnimationFrame
-    if(startTime === undefined){ // get a reference for the start time if this is the first frame
-        startTime = time;
-    }
-    ctx.fillStyle = BGStyle;
-    ctx.fillRect(0, 0, canvas.width, canvas.height); // clear the canvas bydrawing over it
-    textOffset = ((time - startTime) * textSpeed) % (totalTextSize); // move the text left
-    ctx.fillStyle = textStyle; // set the text style
-    ctx.fillText(textToDisplay, textX - textOffset, canvas.height / 2); // render the text
-
-    requestAnimationFrame(update);// all done request the next frame
+// canvas styles
+ctx.strokeStyle='skyblue';
+ctx.fillStyle='blue';
+// animating vars
+var pct=101;
+var startX=20; //starting x coordinate
+var startY=50; //starting y coordinate
+var endX=225; //endng x coordinate
+var endY=100; //ending y coordinate
+var dx=endX-startX;
+var dy=endY-startY;
+// start animation loop running
+requestAnimationFrame(animate);
+// listen for mouse events
+window.onmousedown=(function(e){handleMouseDown(e);});
+window.onmouseup=(function(e){handleMouseUp(e);});
+// constantly running loop
+// will animate dot from startX,startY to endX,endY
+function animate(time){
+    // demo: rerun animation
+    if(++pct>100){pct=0;}
+    console.log(dx)
+    // update
+    x=startX+dx*pct/100;
+    y=startY+dy*pct/100;
+    // draw
+    ctx.clearRect(0,0,cw,ch);
+    ctx.beginPath();
+    ctx.moveTo(startX,startY);
+    ctx.lineTo(endX,endY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x,y,5,0,Math.PI*2);
+    ctx.fill()
+    // request another animation loop
+    requestAnimationFrame(animate);
 }
-requestAnimationFrame(update);// to start request the first frame
